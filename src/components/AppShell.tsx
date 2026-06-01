@@ -308,6 +308,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="text-slate-800 capitalize font-semibold">{location.pathname.replace("/", "") || "dashboard"}</span>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={logout} className="text-slate-500 hover:bg-rose-50 hover:text-rose-600 rounded-xl font-semibold transition-colors">
+              <LogOut className="size-4 mr-2" />
+              Log Out
+            </Button>
             <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-pink-50 hover:text-pink-600 rounded-xl relative">
               <Bell className="size-4" />
               <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-pink-500 rounded-full"></span>

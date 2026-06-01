@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShoppingCart, Receipt, Package, Users, AlertTriangle, TrendingUp, Store, ArrowRight } from "lucide-react";
+import { ShoppingCart, Receipt, Package, Users, AlertTriangle, TrendingUp, Store, ArrowRight, LogOut } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { format, subDays, startOfDay } from "date-fns";
 
@@ -21,7 +22,7 @@ function fmt(n: number) {
 }
 
 function Dashboard() {
-  const { roles, supermarketId, fullName } = useAuth();
+  const { roles, supermarketId, fullName, logout } = useAuth();
   const isAdmin = roles.includes("admin");
   const [stats, setStats] = useState<Stats>({ sales: 0, expenses: 0, stockItems: 0, lowStock: 0, salaries: 0, salesCount: 0 });
   const [trend, setTrend] = useState<{ date: string; sales: number; expenses: number }[]>([]);
@@ -116,8 +117,13 @@ function Dashboard() {
               </p>
             </div>
             
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/20 text-white font-black text-2xl shrink-0">
-              {(fullName || "M").charAt(0).toUpperCase()}
+            <div className="flex flex-col items-center gap-3 shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/20 text-white font-black text-2xl">
+                {(fullName || "M").charAt(0).toUpperCase()}
+              </div>
+              <Button onClick={logout} variant="outline" size="sm" className="text-pink-600 border-pink-200 hover:bg-pink-50 rounded-xl w-full">
+                <LogOut className="size-3.5 mr-2" /> Log out
+              </Button>
             </div>
           </div>
         </div>
@@ -200,9 +206,16 @@ function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-800">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-1">Last 14 days {isAdmin ? "across all branches" : "for your branch"}.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-800">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1">Last 14 days {isAdmin ? "across all branches" : "for your branch"}.</p>
+        </div>
+        {isAdmin && (
+          <Button onClick={logout} variant="outline" className="text-pink-600 border-pink-200 hover:bg-pink-50 rounded-xl shadow-sm md:self-start">
+            <LogOut className="size-4 mr-2" /> Log out
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
