@@ -93,6 +93,17 @@ const getGlowStyles = (pathname: string) => {
   }
 };
 
+const getBackgroundImage = (roles: string[], pathname: string) => {
+  if (pathname.includes("sales")) return 'url("/sales-bg.jpg")';
+  if (pathname.includes("expenses")) return 'url("/expenses-bg.jpg")';
+  if (pathname.includes("stock")) return 'url("/stock-bg.jpg")';
+  if (pathname.includes("salaries")) return 'url("/salaries-bg.jpg")';
+  if (pathname.includes("supermarkets")) return 'url("/supermarkets-bg.jpg")';
+  if (pathname.includes("audit")) return 'url("/audit-bg.jpg")';
+  return 'url("/supermarket-bg.jpg")';
+};
+
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { roles, fullName, user, supermarketId } = useAuth();
   const location = useLocation();
@@ -188,7 +199,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div 
           className="absolute inset-0 opacity-[0.06] scale-105"
           style={{ 
-            backgroundImage: 'url("/supermarket-bg.jpg")', 
+            backgroundImage: getBackgroundImage(roles, location.pathname), 
             backgroundSize: 'cover', 
             backgroundPosition: 'center',
             filter: 'blur(5px)'
