@@ -98,7 +98,12 @@ function LoginPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back");
-    navigate({ to: "/dashboard" });
+    
+    // Show the full-page "Twimu Information Management System" loader before transitioning
+    setIsInitializing(true);
+    setTimeout(() => {
+      navigate({ to: "/dashboard" });
+    }, 1500);
   }
 
   async function doSignup(e: React.FormEvent) {
@@ -120,7 +125,12 @@ function LoginPage() {
     toast.success("Account created — signing you in");
     const { error: e2 } = await supabase.auth.signInWithPassword({ email: sEmail, password: sPwd });
     if (e2) return toast.error(e2.message);
-    navigate({ to: "/dashboard" });
+    
+    // Show the full-page loader before transitioning
+    setIsInitializing(true);
+    setTimeout(() => {
+      navigate({ to: "/dashboard" });
+    }, 1500);
   }
 
   if (isInitializing) {
