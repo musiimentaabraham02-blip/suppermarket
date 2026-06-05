@@ -20,6 +20,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const [supermarkets, setSupermarkets] = useState<Sm[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // login
   const [email, setEmail] = useState("");
@@ -33,7 +34,11 @@ function LoginPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) {
+        navigate({ to: "/dashboard" });
+      } else {
+        setIsInitializing(false);
+      }
     });
     
     setSupermarkets([
@@ -116,6 +121,24 @@ function LoginPage() {
     const { error: e2 } = await supabase.auth.signInWithPassword({ email: sEmail, password: sPwd });
     if (e2) return toast.error(e2.message);
     navigate({ to: "/dashboard" });
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#FFF5F6] via-white to-[#FFF0F2] flex flex-col items-center justify-center p-4">
+        <div className="animate-pulse flex flex-col items-center gap-6">
+          <div className="p-4 rounded-3xl bg-white shadow-xl shadow-pink-100/50">
+            <Store className="size-12 text-pink-500" />
+          </div>
+          <div className="space-y-3 text-center">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Twimu Information Management System</h1>
+            <div className="flex items-center justify-center gap-2 text-pink-600 font-medium text-sm">
+              <Loader2 className="size-4 animate-spin" /> Starting up...
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
