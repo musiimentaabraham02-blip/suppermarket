@@ -53,6 +53,7 @@ function LoginPage() {
   async function doLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setIsInitializing(true);
     let { error } = await supabase.auth.signInWithPassword({ email, password });
     
     // Auto-create Director demo account on first use if it does not exist in Supabase
@@ -95,20 +96,19 @@ function LoginPage() {
       }
     }
 
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Welcome back");
+    if (error) {
+      setIsInitializing(false);
+      setLoading(false);
+      return toast.error(error.message);
+    }
     
-    // Show the full-page "Twimu Information Management System" loader before transitioning
-    setIsInitializing(true);
-    setTimeout(() => {
-      navigate({ to: "/dashboard" });
-    }, 1500);
+    navigate({ to: "/dashboard" });
   }
 
   async function doSignup(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setIsInitializing(true);
     const { error } = await supabase.auth.signUp({
       email: sEmail,
       password: sPwd,
@@ -120,17 +120,20 @@ function LoginPage() {
         },
       },
     });
-    setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      setIsInitializing(false);
+      setLoading(false);
+      return toast.error(error.message);
+    }
     toast.success("Account created — signing you in");
     const { error: e2 } = await supabase.auth.signInWithPassword({ email: sEmail, password: sPwd });
-    if (e2) return toast.error(e2.message);
+    if (e2) {
+      setIsInitializing(false);
+      setLoading(false);
+      return toast.error(e2.message);
+    }
     
-    // Show the full-page loader before transitioning
-    setIsInitializing(true);
-    setTimeout(() => {
-      navigate({ to: "/dashboard" });
-    }, 1500);
+    navigate({ to: "/dashboard" });
   }
 
   if (isInitializing) {
