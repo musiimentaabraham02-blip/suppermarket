@@ -38,9 +38,17 @@ function SupermarketsPage() {
     const list = data ?? [];
     setRows(list);
     
-    // Automatically select the first branch if none is selected
-    if (list.length > 0 && !selectedBranch) {
-      handleSelectBranch(list[0]);
+    // Check if there is a preselected branch from the dashboard panels
+    const localSupermarkets = JSON.parse(localStorage.getItem(`twimu_fallback_supermarkets`) || "[]");
+    const combined = [...localSupermarkets, ...list];
+    const preselectedId = localStorage.getItem("twimu_preselected_branch_id");
+    const matched = preselectedId ? combined.find(x => x.id === preselectedId) : null;
+    
+    if (matched) {
+      handleSelectBranch(matched);
+      localStorage.removeItem("twimu_preselected_branch_id");
+    } else if (combined.length > 0 && !selectedBranch) {
+      handleSelectBranch(combined[0]);
     }
   }
 

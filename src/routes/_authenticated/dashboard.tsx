@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,11 +23,13 @@ function fmt(n: number) {
 
 function Dashboard() {
   const { roles, supermarketId, fullName, logout } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = roles.includes("admin");
   const [stats, setStats] = useState<Stats>({ sales: 0, expenses: 0, stockItems: 0, lowStock: 0, salaries: 0, salesCount: 0 });
   const [trend, setTrend] = useState<{ date: string; sales: number; expenses: number }[]>([]);
   const [byBranch, setByBranch] = useState<{ name: string; sales: number }[]>([]);
   const [anomalies, setAnomalies] = useState<{ id: string; amount: number; created_at: string }[]>([]);
+  const [branchPanels, setBranchPanels] = useState<any[]>([]);
 
   useEffect(() => {
     load();
@@ -82,11 +84,48 @@ function Dashboard() {
     setTrend(days);
 
     if (isAdmin) {
-      const { data: sm } = await supabase.from("supermarkets").select("id,name");
-      const map = new Map((sm ?? []).map((x) => [x.id, x.name]));
+      const { data: sm } = await supabase.from("supermarkets").select("id,name,location");
+      const localSm = JSON.parse(localStorage.getItem("twimu_fallback_supermarkets") || "[]");
+      const allSm = [...localSm, ...(sm ?? [])];
+
+      // Default preset branches to guarantee 4 panels if empty or missing
+      const defaultBranches = [
+        { id: "preset-1", name: "Kampala Central Branch", location: "Kampala Road" },
+        { id: "preset-2", name: "Entebbe Road Branch", location: "Lubowa" },
+        { id: "preset-3", name: "Jinja Highway Branch", location: "Mukono" },
+        { id: "preset-4", name: "Mbarara Highway Branch", location: "Mbarara City" }
+      ];
+
+      defaultBranches.forEach(df => {
+        if (!allSm.some(s => s.id === df.id || s.name.toLowerCase() === df.name.toLowerCase())) {
+          allSm.push(df);
+        }
+      });
+
+      const map = new Map(allSm.map((x) => [x.id, x.name]));
       const agg = new Map<string, number>();
       sales.forEach((r) => agg.set(r.supermarket_id, (agg.get(r.supermarket_id) ?? 0) + Number(r.amount)));
       setByBranch(Array.from(agg.entries()).map(([id, v]) => ({ name: map.get(id) ?? "—", sales: v })));
+
+      // Calculate branch-by-branch panels for the 4 supermarkets
+      const panels = allSm.map(branch => {
+        const branchSales = sales.filter((x: any) => x.supermarket_id === branch.id);
+        const branchExpenses = expenses.filter((x: any) => x.supermarket_id === branch.id);
+        const branchStock = stock.filter((x: any) => x.supermarket_id === branch.id);
+        const branchSalaries = salaries.filter((x: any) => x.supermarket_id === branch.id);
+
+        return {
+          id: branch.id,
+          name: branch.name,
+          location: branch.location || "Uganda",
+          sales: branchSales.reduce((a, r) => a + Number(r.amount), 0),
+          expenses: branchExpenses.reduce((a, r) => a + Number(r.amount), 0),
+          stockCount: branchStock.length,
+          payroll: branchSalaries.reduce((a, r) => a + Number(r.monthly_salary), 0),
+        };
+      });
+
+      setBranchPanels(panels);
     }
 
     // Simple anomaly detection: amount > 2x avg
@@ -224,6 +263,90 @@ function Dashboard() {
         <StatCard icon={Package} label="Stock items" value={String(stats.stockItems)} hint={stats.lowStock ? `${stats.lowStock} low stock` : "All healthy"} warning={stats.lowStock > 0} />
         <StatCard icon={Users} label="Monthly payroll" value={fmt(stats.salaries)} />
       </div>
+
+      {/* Supermarket Branch Panels */}
+      {isAdmin && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold tracking-tight text-slate-800 flex items-center gap-2 mt-2">
+            <Store className="size-5 text-pink-500" /> Supermarket Branches
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            {branchPanels.map((bp) => {
+              const netProfit = bp.sales - bp.expenses;
+              return (
+                <Card key={bp.id} className="bg-white/95 border-pink-100 shadow-md shadow-pink-100/20 backdrop-blur-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 rounded-3xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-6 opacity-[0.02] text-pink-500 pointer-events-none group-hover:scale-110 transition-transform duration-500">
+                    <Store className="size-36" />
+                  </div>
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg font-bold text-slate-800">{bp.name}</CardTitle>
+                      <CardDescription className="text-slate-400 text-xs mt-0.5">{bp.location}</CardDescription>
+                    </div>
+                    <div className="p-2.5 rounded-2xl bg-pink-50 border border-pink-100 text-pink-500">
+                      <Store className="size-5" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-pink-50/20 rounded-2xl border border-pink-50 flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-pink-100 text-pink-600">
+                          <ShoppingCart className="size-3.5" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase font-bold text-slate-400">Sales</div>
+                          <div className="text-sm font-extrabold text-slate-800">{fmt(bp.sales)}</div>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-rose-50/20 rounded-2xl border border-rose-50 flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-rose-100 text-rose-600">
+                          <Receipt className="size-3.5" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase font-bold text-slate-400">Expenses</div>
+                          <div className="text-sm font-extrabold text-slate-800">{fmt(bp.expenses)}</div>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-emerald-50/20 rounded-2xl border border-emerald-50 flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+                          <TrendingUp className="size-3.5" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase font-bold text-slate-400">Net Profit</div>
+                          <div className={`text-sm font-extrabold ${netProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{fmt(netProfit)}</div>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-indigo-50/20 rounded-2xl border border-indigo-50 flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-indigo-100 text-indigo-600">
+                          <Package className="size-3.5" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase font-bold text-slate-400">Stock Items</div>
+                          <div className="text-sm font-extrabold text-slate-800">{bp.stockCount} SKUs</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-50 flex justify-between items-center text-xs text-slate-400">
+                      <span>Payroll: <strong>{fmt(bp.payroll)}</strong></span>
+                      <Button 
+                        onClick={() => {
+                          localStorage.setItem("twimu_preselected_branch_id", bp.id);
+                          navigate({ to: "/supermarkets" });
+                        }}
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-pink-600 hover:text-pink-700 hover:bg-pink-50/50 p-0 h-auto font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        Audit Branch <ArrowRight className="size-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="bg-white/95 border-pink-100 shadow-md shadow-pink-100/30 text-slate-800 backdrop-blur-md">
