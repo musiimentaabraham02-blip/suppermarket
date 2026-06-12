@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ShoppingCart, Receipt, Package, Users, AlertTriangle, TrendingUp, Store, ArrowRight, LogOut } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { format, subDays, startOfDay } from "date-fns";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -25,6 +26,17 @@ function Dashboard() {
   const { roles, supermarketId, fullName, logout } = useAuth();
   const navigate = useNavigate();
   const isAdmin = roles.includes("admin");
+  
+  // Raw data arrays
+  const [salesData, setSalesData] = useState<any[]>([]);
+  const [expensesData, setExpensesData] = useState<any[]>([]);
+  const [stockData, setStockData] = useState<any[]>([]);
+  const [salariesData, setSalariesData] = useState<any[]>([]);
+  
+  // Supermarket list and active tab
+  const [supermarkets, setSupermarkets] = useState<any[]>([]);
+  const [selectedBranchId, setSelectedBranchId] = useState("all");
+
   const [stats, setStats] = useState<Stats>({ sales: 0, expenses: 0, stockItems: 0, lowStock: 0, salaries: 0, salesCount: 0 });
   const [trend, setTrend] = useState<{ date: string; sales: number; expenses: number }[]>([]);
   const [byBranch, setByBranch] = useState<{ name: string; sales: number }[]>([]);
@@ -55,33 +67,10 @@ function Dashboard() {
     const stock = [...localStock, ...(st.data ?? [])];
     const salaries = [...localSalaries, ...(sa.data ?? [])];
 
-    setStats({
-      sales: sales.reduce((a, r) => a + Number(r.amount), 0),
-      expenses: expenses.reduce((a, r) => a + Number(r.amount), 0),
-      stockItems: stock.length,
-      lowStock: stock.filter((r) => r.quantity <= r.reorder_level).length,
-      salaries: salaries.reduce((a, r) => a + Number(r.monthly_salary), 0),
-      salesCount: sales.length,
-    });
-
-
-    // 14-day trend
-    const days = Array.from({ length: 14 }).map((_, i) => {
-      const d = startOfDay(subDays(new Date(), 13 - i));
-      const key = format(d, "yyyy-MM-dd");
-      return { date: format(d, "MMM d"), key, sales: 0, expenses: 0 };
-    });
-    sales.forEach((r) => {
-      const k = format(new Date(r.created_at), "yyyy-MM-dd");
-      const day = days.find((d) => d.key === k);
-      if (day) day.sales += Number(r.amount);
-    });
-    expenses.forEach((r) => {
-      const k = format(new Date(r.created_at), "yyyy-MM-dd");
-      const day = days.find((d) => d.key === k);
-      if (day) day.expenses += Number(r.amount);
-    });
-    setTrend(days);
+    setSalesData(sales);
+    setExpensesData(expenses);
+    setStockData(stock);
+    setSalariesData(salaries);
 
     if (isAdmin) {
       const { data: sm } = await supabase.from("supermarkets").select("id,name,location");
@@ -101,6 +90,8 @@ function Dashboard() {
           allSm.push(df);
         }
       });
+      
+      setSupermarkets(allSm);
 
       const map = new Map(allSm.map((x) => [x.id, x.name]));
       const agg = new Map<string, number>();
@@ -127,13 +118,53 @@ function Dashboard() {
 
       setBranchPanels(panels);
     }
+  }
 
-    // Simple anomaly detection: amount > 2x avg
+  // Recalculate metrics when selectedBranchId or raw data changes
+  useEffect(() => {
+    if (salesData.length === 0 && expensesData.length === 0 && stockData.length === 0 && salariesData.length === 0) {
+      return;
+    }
+
+    const sales = selectedBranchId === "all" ? salesData : salesData.filter(x => x.supermarket_id === selectedBranchId);
+    const expenses = selectedBranchId === "all" ? expensesData : expensesData.filter(x => x.supermarket_id === selectedBranchId);
+    const stock = selectedBranchId === "all" ? stockData : stockData.filter(x => x.supermarket_id === selectedBranchId);
+    const salaries = selectedBranchId === "all" ? salariesData : salariesData.filter(x => x.supermarket_id === selectedBranchId);
+
+    setStats({
+      sales: sales.reduce((a, r) => a + Number(r.amount), 0),
+      expenses: expenses.reduce((a, r) => a + Number(r.amount), 0),
+      stockItems: stock.length,
+      lowStock: stock.filter((r) => r.quantity <= r.reorder_level).length,
+      salaries: salaries.reduce((a, r) => a + Number(r.monthly_salary), 0),
+      salesCount: sales.length,
+    });
+
+    // 14-day trend
+    const days = Array.from({ length: 14 }).map((_, i) => {
+      const d = startOfDay(subDays(new Date(), 13 - i));
+      const key = format(d, "yyyy-MM-dd");
+      return { date: format(d, "MMM d"), key, sales: 0, expenses: 0 };
+    });
+    sales.forEach((r) => {
+      const k = format(new Date(r.created_at), "yyyy-MM-dd");
+      const day = days.find((d) => d.key === k);
+      if (day) day.sales += Number(r.amount);
+    });
+    expenses.forEach((r) => {
+      const k = format(new Date(r.created_at), "yyyy-MM-dd");
+      const day = days.find((d) => d.key === k);
+      if (day) day.expenses += Number(r.amount);
+    });
+    setTrend(days);
+
     if (sales.length > 0) {
       const avg = sales.reduce((a, r) => a + Number(r.amount), 0) / sales.length;
       setAnomalies(sales.filter((r) => Number(r.amount) > avg * 2).slice(0, 5).map((r, i) => ({ id: String(i), amount: Number(r.amount), created_at: r.created_at })));
+    } else {
+      setAnomalies([]);
     }
-  }
+  }, [selectedBranchId, salesData, expensesData, stockData, salariesData]);
 
   if (!isAdmin) {
     return (
@@ -243,12 +274,16 @@ function Dashboard() {
     );
   }
 
+  const supermarketMap = new Map(supermarkets.map(s => [s.id, s.name]));
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800">Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Last 14 days {isAdmin ? "across all branches" : "for your branch"}.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Last 14 days {selectedBranchId === "all" ? "across all branches" : `for ${supermarketMap.get(selectedBranchId) || "selected branch"}`}.
+          </p>
         </div>
         {isAdmin && (
           <Button onClick={logout} variant="outline" className="text-pink-600 border-pink-200 hover:bg-pink-50 rounded-xl shadow-sm md:self-start">
@@ -257,6 +292,22 @@ function Dashboard() {
         )}
       </div>
 
+      {/* Supermarket Branch Tab Selector */}
+      {isAdmin && (
+        <Tabs defaultValue="all" value={selectedBranchId} onValueChange={setSelectedBranchId} className="w-full">
+          <TabsList className="bg-pink-50/50 border border-pink-100/50 rounded-2xl p-1 flex flex-wrap gap-1 md:inline-flex h-auto w-full md:w-auto">
+            <TabsTrigger value="all" className="rounded-xl px-4 py-2 font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-pink-600 data-[state=active]:shadow-sm text-xs md:text-sm cursor-pointer">
+              All Branches
+            </TabsTrigger>
+            {supermarkets.map((s) => (
+              <TabsTrigger key={s.id} value={s.id} className="rounded-xl px-4 py-2 font-bold text-slate-500 data-[state=active]:bg-white data-[state=active]:text-pink-600 data-[state=active]:shadow-sm text-xs md:text-sm cursor-pointer">
+                {s.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={ShoppingCart} label="Sales" value={fmt(stats.sales)} hint={`${stats.salesCount} transactions`} />
         <StatCard icon={Receipt} label="Expenses" value={fmt(stats.expenses)} />
@@ -264,8 +315,8 @@ function Dashboard() {
         <StatCard icon={Users} label="Monthly payroll" value={fmt(stats.salaries)} />
       </div>
 
-      {/* Supermarket Branch Panels */}
-      {isAdmin && (
+      {/* Supermarket Branch Panels (Only shown on "All Branches" tab) */}
+      {isAdmin && selectedBranchId === "all" && (
         <div className="space-y-4">
           <h2 className="text-xl font-bold tracking-tight text-slate-800 flex items-center gap-2 mt-2">
             <Store className="size-5 text-pink-500" /> Supermarket Branches
@@ -330,14 +381,13 @@ function Dashboard() {
                       <span>Payroll: <strong>{fmt(bp.payroll)}</strong></span>
                       <Button 
                         onClick={() => {
-                          localStorage.setItem("twimu_preselected_branch_id", bp.id);
-                          navigate({ to: "/supermarkets" });
+                          setSelectedBranchId(bp.id);
                         }}
                         variant="ghost" 
                         size="sm" 
                         className="text-pink-600 hover:text-pink-700 hover:bg-pink-50/50 p-0 h-auto font-bold flex items-center gap-1 cursor-pointer"
                       >
-                        Audit Branch <ArrowRight className="size-3" />
+                        Open Panel <ArrowRight className="size-3" />
                       </Button>
                     </div>
                   </CardContent>
@@ -372,7 +422,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {isAdmin ? (
+        {isAdmin && selectedBranchId === "all" ? (
           <Card className="bg-white/95 border-pink-100 shadow-md shadow-pink-100/30 text-slate-800 backdrop-blur-md">
             <CardHeader>
               <CardTitle className="text-base font-bold text-slate-800">Sales by branch</CardTitle>
@@ -403,7 +453,7 @@ function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-extrabold text-pink-600 tracking-tight">{fmt(stats.sales - stats.expenses)}</div>
-              <p className="text-sm text-slate-500 mt-2">Across the last 14 days for your branch.</p>
+              <p className="text-sm text-slate-500 mt-2">Across the last 14 days for this branch.</p>
             </CardContent>
           </Card>
         )}
