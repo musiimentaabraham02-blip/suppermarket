@@ -103,9 +103,10 @@ function SalesPage() {
       } else {
         // Fallback preset branches if DB is empty or inaccessible
         const fallbackBranches = [
-          { id: "preset-1", name: "Kampala Central Branch" },
-          { id: "preset-2", name: "Entebbe Road Branch" },
-          { id: "preset-3", name: "Jinja Highway Branch" },
+          { id: "preset-1", name: "Shallom Supermarket" },
+          { id: "preset-2", name: "Alleluya Supermarket" },
+          { id: "preset-3", name: "Suubbi Supermarket" },
+          { id: "preset-4", name: "Simple Supermarket" },
         ];
         setSupermarkets(fallbackBranches);
         if (isAdmin) {

@@ -121,10 +121,10 @@ function Dashboard() {
 
       // Default preset branches to guarantee 4 panels if empty or missing
       const defaultBranches = [
-        { id: "preset-1", name: "Kampala Central Branch", location: "Kampala Road" },
-        { id: "preset-2", name: "Entebbe Road Branch", location: "Lubowa" },
-        { id: "preset-3", name: "Jinja Highway Branch", location: "Mukono" },
-        { id: "preset-4", name: "Mbarara Highway Branch", location: "Mbarara City" },
+        { id: "preset-1", name: "Shallom Supermarket", location: "Uganda" },
+        { id: "preset-2", name: "Alleluya Supermarket", location: "Uganda" },
+        { id: "preset-3", name: "Suubbi Supermarket", location: "Uganda" },
+        { id: "preset-4", name: "Simple Supermarket", location: "Uganda" },
       ];
 
       defaultBranches.forEach((df) => {
