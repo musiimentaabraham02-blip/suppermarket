@@ -6,23 +6,44 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { 
-  ShoppingCart, 
-  Receipt, 
-  TrendingUp, 
-  Building2, 
-  Plus, 
-  Trash2, 
-  Download, 
-  Loader2, 
-  Search, 
-  AlertTriangle 
+import {
+  ShoppingCart,
+  Receipt,
+  TrendingUp,
+  Building2,
+  Plus,
+  Trash2,
+  Download,
+  Loader2,
+  Search,
+  AlertTriangle,
 } from "lucide-react";
 import { format, subDays, isToday, isThisMonth } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export const Route = createFileRoute("/_authenticated/sales")({
   component: SalesPage,
@@ -44,10 +65,10 @@ interface Supermarket {
 }
 
 function fmtUGX(v: number) {
-  return new Intl.NumberFormat("en-UG", { 
-    style: "currency", 
-    currency: "UGX", 
-    maximumFractionDigits: 0 
+  return new Intl.NumberFormat("en-UG", {
+    style: "currency",
+    currency: "UGX",
+    maximumFractionDigits: 0,
   }).format(v);
 }
 
@@ -84,7 +105,7 @@ function SalesPage() {
         const fallbackBranches = [
           { id: "preset-1", name: "Kampala Central Branch" },
           { id: "preset-2", name: "Entebbe Road Branch" },
-          { id: "preset-3", name: "Jinja Highway Branch" }
+          { id: "preset-3", name: "Jinja Highway Branch" },
         ];
         setSupermarkets(fallbackBranches);
         if (isAdmin) {
@@ -103,7 +124,7 @@ function SalesPage() {
       if (!isAdmin && supermarketId) {
         query = query.eq("supermarket_id", supermarketId);
       }
-      
+
       const { data, error } = await query.order("created_at", { ascending: false }).limit(200);
       if (error && !error.message.includes("permission denied")) {
         toast.error("Database connection issue. Showing local records.");
@@ -145,24 +166,28 @@ function SalesPage() {
       amount: Number(amount),
       description: description.trim(),
       supermarket_id: branchId,
-      manager_id: user?.id || null
+      manager_id: user?.id || null,
     };
 
     try {
       const { error } = await supabase.from("sales").insert(payload);
-      
+
       if (error) {
         // Fallback for demo/restricted modes
-        if (error.message.includes("has_role") || error.message.includes("row-level security") || error.message.includes("permission denied")) {
+        if (
+          error.message.includes("has_role") ||
+          error.message.includes("row-level security") ||
+          error.message.includes("permission denied")
+        ) {
           const newRow = {
             id: `local-${Date.now()}`,
             created_at: new Date().toISOString(),
-            ...payload
+            ...payload,
           };
           const localDataRaw = localStorage.getItem("twimu_fallback_sales");
           const localData = localDataRaw ? JSON.parse(localDataRaw) : [];
           localStorage.setItem("twimu_fallback_sales", JSON.stringify([newRow, ...localData]));
-          
+
           toast.success("Sale logged successfully (Local Mode)");
           setAmount("");
           setDescription("");
@@ -210,13 +235,15 @@ function SalesPage() {
   function handleExportCSV() {
     if (sales.length === 0) return toast.error("No data to export.");
     const headers = "Supermarket Branch,Amount (UGX),Description,Date/Time\n";
-    const csvContent = sales.map(s => {
-      const branchName = supermarketMap.get(s.supermarket_id) || s.supermarket_id;
-      const formattedAmount = s.amount;
-      const desc = s.description ? s.description.replace(/"/g, '""') : "";
-      const date = format(new Date(s.created_at), "yyyy-MM-dd HH:mm");
-      return `"${branchName}",${formattedAmount},"${desc}","${date}"`;
-    }).join("\n");
+    const csvContent = sales
+      .map((s) => {
+        const branchName = supermarketMap.get(s.supermarket_id) || s.supermarket_id;
+        const formattedAmount = s.amount;
+        const desc = s.description ? s.description.replace(/"/g, '""') : "";
+        const date = format(new Date(s.created_at), "yyyy-MM-dd HH:mm");
+        return `"${branchName}",${formattedAmount},"${desc}","${date}"`;
+      })
+      .join("\n");
 
     const blob = new Blob([headers + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
@@ -228,15 +255,16 @@ function SalesPage() {
     toast.success("CSV export downloaded!");
   }
 
-  const supermarketMap = new Map(supermarkets.map(s => [s.id, s.name]));
+  const supermarketMap = new Map(supermarkets.map((s) => [s.id, s.name]));
 
   // Calculate statistics
-  const todaySalesList = sales.filter(s => isToday(new Date(s.created_at)));
+  const todaySalesList = sales.filter((s) => isToday(new Date(s.created_at)));
   const totalSalesToday = todaySalesList.reduce((acc, s) => acc + s.amount, 0);
   const transactionsToday = todaySalesList.length;
-  const highestSaleToday = todaySalesList.length > 0 ? Math.max(...todaySalesList.map(s => s.amount)) : 0;
+  const highestSaleToday =
+    todaySalesList.length > 0 ? Math.max(...todaySalesList.map((s) => s.amount)) : 0;
   const totalSalesThisMonth = sales
-    .filter(s => isThisMonth(new Date(s.created_at)))
+    .filter((s) => isThisMonth(new Date(s.created_at)))
     .reduce((acc, s) => acc + s.amount, 0);
 
   // Generate 7-day trend data
@@ -244,13 +272,13 @@ function SalesPage() {
     const d = subDays(new Date(), 6 - i);
     const key = format(d, "yyyy-MM-dd");
     const label = format(d, "EEE");
-    const daySales = sales.filter(s => format(new Date(s.created_at), "yyyy-MM-dd") === key);
+    const daySales = sales.filter((s) => format(new Date(s.created_at), "yyyy-MM-dd") === key);
     const total = daySales.reduce((acc, s) => acc + s.amount, 0);
     return { name: label, amount: total };
   });
 
   // Filter sales list based on search query
-  const filteredSales = sales.filter(s => {
+  const filteredSales = sales.filter((s) => {
     if (!searchQuery) return true;
     const term = searchQuery.toLowerCase();
     const branchName = supermarketMap.get(s.supermarket_id) || "";
@@ -268,7 +296,9 @@ function SalesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">Sales Register</h1>
-          <p className="text-sm text-slate-500 mt-1">Record, track, and monitor daily sales receipts across branches.</p>
+          <p className="text-sm text-slate-500 mt-1">
+            Record, track, and monitor daily sales receipts across branches.
+          </p>
         </div>
       </div>
 
@@ -343,28 +373,43 @@ function SalesPage() {
           <Card className="bg-white/95 border-pink-100 shadow-md shadow-pink-100/30 text-slate-800 backdrop-blur-md">
             <CardHeader>
               <CardTitle className="text-lg font-bold text-slate-800">Record New Sale</CardTitle>
-              <CardDescription className="text-slate-500">Log a new store transaction.</CardDescription>
+              <CardDescription className="text-slate-500">
+                Log a new store transaction.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {!isAdmin && !supermarketId ? (
                 <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 text-amber-800 flex items-start gap-3 text-sm">
                   <AlertTriangle className="size-5 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">Branch Unassigned:</span> Your manager account is not assigned to a branch yet. Please contact a Director to assign you a branch before recording sales.
+                    <span className="font-bold">Branch Unassigned:</span> Your manager account is
+                    not assigned to a branch yet. Please contact a Director to assign you a branch
+                    before recording sales.
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleRecordSale} className="space-y-4">
                   {isAdmin && (
                     <div className="space-y-2">
-                      <Label htmlFor="branch" className="text-slate-600 font-semibold">Select Branch</Label>
+                      <Label htmlFor="branch" className="text-slate-600 font-semibold">
+                        Select Branch
+                      </Label>
                       <Select value={selectedSupermarket} onValueChange={setSelectedSupermarket}>
-                        <SelectTrigger id="branch" className="bg-white border-pink-200 text-slate-800 rounded-xl focus:ring-pink-400/50">
+                        <SelectTrigger
+                          id="branch"
+                          className="bg-white border-pink-200 text-slate-800 rounded-xl focus:ring-pink-400/50"
+                        >
                           <SelectValue placeholder="Choose supermarket branch" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-pink-100 text-slate-800 backdrop-blur-xl">
                           {supermarkets.map((s) => (
-                            <SelectItem key={s.id} value={s.id} className="focus:bg-pink-50 focus:text-pink-600">{s.name}</SelectItem>
+                            <SelectItem
+                              key={s.id}
+                              value={s.id}
+                              className="focus:bg-pink-50 focus:text-pink-600"
+                            >
+                              {s.name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -372,7 +417,9 @@ function SalesPage() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="amount" className="text-slate-600 font-semibold">Amount (UGX)</Label>
+                    <Label htmlFor="amount" className="text-slate-600 font-semibold">
+                      Amount (UGX)
+                    </Label>
                     <Input
                       id="amount"
                       type="number"
@@ -385,7 +432,9 @@ function SalesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="desc" className="text-slate-600 font-semibold">Description</Label>
+                    <Label htmlFor="desc" className="text-slate-600 font-semibold">
+                      Description
+                    </Label>
                     <Input
                       id="desc"
                       type="text"
@@ -397,9 +446,9 @@ function SalesPage() {
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    disabled={saving} 
+                  <Button
+                    type="submit"
+                    disabled={saving}
                     className="w-full h-11 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white border-0 shadow-lg shadow-pink-500/20 font-bold rounded-xl transition-all active:scale-[0.98] cursor-pointer"
                   >
                     {saving ? (
@@ -426,33 +475,43 @@ function SalesPage() {
             <CardContent className="h-60 pt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.06)" vertical={false} />
-                  <XAxis dataKey="name" fontSize={11} stroke="rgba(15,23,42,0.4)" tickLine={false} axisLine={false} />
-                  <YAxis 
-                    fontSize={11} 
-                    stroke="rgba(15,23,42,0.4)" 
-                    tickLine={false} 
-                    axisLine={false} 
-                    tickFormatter={(value) => `${(value / 1000)}k`} 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(15,23,42,0.06)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    fontSize={11}
+                    stroke="rgba(15,23,42,0.4)"
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    fontSize={11}
+                    stroke="rgba(15,23,42,0.4)"
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `${value / 1000}k`}
                   />
                   <Tooltip
-                    contentStyle={{ 
-                      backgroundColor: 'rgba(255,255,255,0.95)', 
-                      borderColor: 'rgba(244,63,94,0.1)', 
-                      borderRadius: '12px', 
-                      color: '#0f172a', 
-                      boxShadow: '0 4px 12px rgba(244,63,94,0.08)' 
+                    contentStyle={{
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      borderColor: "rgba(244,63,94,0.1)",
+                      borderRadius: "12px",
+                      color: "#0f172a",
+                      boxShadow: "0 4px 12px rgba(244,63,94,0.08)",
                     }}
-                    itemStyle={{ color: '#0f172a' }}
+                    itemStyle={{ color: "#0f172a" }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
                     name="Sales (UGX)"
-                    stroke="#ff69b4" 
-                    strokeWidth={3} 
-                    dot={{ r: 3, strokeWidth: 2 }} 
-                    activeDot={{ r: 5 }} 
+                    stroke="#ff69b4"
+                    strokeWidth={3}
+                    dot={{ r: 3, strokeWidth: 2 }}
+                    activeDot={{ r: 5 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -465,23 +524,27 @@ function SalesPage() {
           <Card className="bg-white/95 border-pink-100 shadow-md shadow-pink-100/30 text-slate-800 backdrop-blur-md overflow-hidden h-full flex flex-col">
             <CardHeader className="border-b border-pink-50 flex flex-col sm:flex-row sm:items-center justify-between py-5 gap-4">
               <div>
-                <CardTitle className="text-lg font-bold text-slate-800">Recent Transactions</CardTitle>
-                <CardDescription className="text-slate-500">{filteredSales.length} records found</CardDescription>
+                <CardTitle className="text-lg font-bold text-slate-800">
+                  Recent Transactions
+                </CardTitle>
+                <CardDescription className="text-slate-500">
+                  {filteredSales.length} records found
+                </CardDescription>
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="relative w-full sm:w-56">
                   <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                  <Input 
-                    placeholder="Search sales..." 
+                  <Input
+                    placeholder="Search sales..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 h-9 w-full bg-white border-pink-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-pink-400/50 text-sm rounded-xl"
                   />
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleExportCSV} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCSV}
                   className="h-9 bg-white border-pink-200 text-pink-600 hover:bg-pink-50/50 hover:text-pink-700 whitespace-nowrap rounded-xl font-bold cursor-pointer"
                 >
                   <Download className="size-3.5 mr-2" /> Export CSV
@@ -512,7 +575,10 @@ function SalesPage() {
                       </TableRow>
                     ) : filteredSales.length === 0 ? (
                       <TableRow className="hover:bg-transparent border-0">
-                        <TableCell colSpan={isAdmin ? 5 : 4} className="text-center py-20 text-slate-400">
+                        <TableCell
+                          colSpan={isAdmin ? 5 : 4}
+                          className="text-center py-20 text-slate-400"
+                        >
                           <div className="flex flex-col items-center justify-center gap-2">
                             <ShoppingCart className="size-8 text-slate-300" />
                             <span>No sales logs recorded yet.</span>
@@ -521,7 +587,10 @@ function SalesPage() {
                       </TableRow>
                     ) : (
                       filteredSales.map((s) => (
-                        <TableRow key={s.id} className="border-pink-50 hover:bg-pink-50/10 transition-colors">
+                        <TableRow
+                          key={s.id}
+                          className="border-pink-50 hover:bg-pink-50/10 transition-colors"
+                        >
                           {isAdmin && (
                             <TableCell className="font-semibold text-slate-600">
                               {supermarketMap.get(s.supermarket_id) || "Default Supermarket"}
@@ -530,7 +599,10 @@ function SalesPage() {
                           <TableCell className="font-extrabold text-pink-600 whitespace-nowrap">
                             {fmtUGX(s.amount)}
                           </TableCell>
-                          <TableCell className="text-slate-700 max-w-[200px] truncate" title={s.description || ""}>
+                          <TableCell
+                            className="text-slate-700 max-w-[200px] truncate"
+                            title={s.description || ""}
+                          >
                             {s.description || "—"}
                           </TableCell>
                           <TableCell className="text-slate-400 text-sm whitespace-nowrap">
@@ -538,10 +610,10 @@ function SalesPage() {
                           </TableCell>
                           <TableCell>
                             {isAdmin && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => handleDeleteSale(s.id)} 
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteSale(s.id)}
                                 className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
                               >
                                 <Trash2 className="size-4" />

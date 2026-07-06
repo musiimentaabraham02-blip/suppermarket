@@ -11,6 +11,7 @@ export interface AuthState {
   roles: AppRole[];
   supermarketId: string | null;
   fullName: string | null;
+  logout: () => Promise<void>;
 }
 
 export function useAuth(): AuthState {
@@ -55,21 +56,25 @@ export function useAuth(): AuthState {
         supabase.from("user_roles").select("role").eq("user_id", uid),
         supabase.from("profiles").select("supermarket_id, full_name").eq("id", uid).maybeSingle(),
       ]);
-      
+
       userRoles = (r ?? []).map((x) => x.role as AppRole);
       currentSupermarketId = p?.supermarket_id ?? null;
       currentFullName = p?.full_name ?? null;
     } catch (dbError) {
       console.warn("Database role/profile fetch failed, applying offline fallback:", dbError);
     }
-    
+
     // Check if there is a local storage fallback first
     if (!currentSupermarketId && uid) {
       const localId = localStorage.getItem("twimu_fallback_supermarket_id_" + uid);
       if (localId) {
         currentSupermarketId = localId;
         // Keep DB in sync in background (catch error silently if RLS fails)
-        supabase.from("profiles").update({ supermarket_id: localId }).eq("id", uid).catch(() => {});
+        supabase
+          .from("profiles")
+          .update({ supermarket_id: localId })
+          .eq("id", uid)
+          .catch(() => {});
       }
     }
 
@@ -89,6 +94,9 @@ export function useAuth(): AuthState {
     setFullName(currentFullName);
   }
 
+  async function logout() {
+    await supabase.auth.signOut();
+  }
 
   return {
     user: session?.user ?? null,
@@ -97,5 +105,6 @@ export function useAuth(): AuthState {
     roles,
     supermarketId,
     fullName,
+    logout,
   };
 }

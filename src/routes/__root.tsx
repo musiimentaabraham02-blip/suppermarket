@@ -95,11 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
 
 import { Toaster } from "sonner";

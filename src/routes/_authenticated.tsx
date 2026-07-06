@@ -17,7 +17,9 @@ function AuthLayout() {
             <Store className="size-12 text-pink-500" />
           </div>
           <div className="space-y-3 text-center">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Twimu Information Management System</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">
+              Twimu Information Management System
+            </h1>
             <div className="flex items-center justify-center gap-2 text-pink-600 font-medium text-sm">
               <Loader2 className="size-4 animate-spin" /> Securing connection...
             </div>

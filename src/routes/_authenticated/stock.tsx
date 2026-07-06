@@ -18,11 +18,16 @@ export const Route = createFileRoute("/_authenticated/stock")({
       ]}
       columns={[
         { key: "item_name", label: "Item" },
-        { key: "quantity", label: "Qty", render: (v, row) => (
-          v <= row.reorder_level
-            ? <Badge variant="destructive">{v} (low)</Badge>
-            : <span>{v}</span>
-        )},
+        {
+          key: "quantity",
+          label: "Qty",
+          render: (v, row) =>
+            v <= row.reorder_level ? (
+              <Badge variant="destructive">{v} (low)</Badge>
+            ) : (
+              <span>{v}</span>
+            ),
+        },
         { key: "buying_price", label: "Buy", render: money },
         { key: "selling_price", label: "Sell", render: money },
         { key: "supplier_name", label: "Supplier" },

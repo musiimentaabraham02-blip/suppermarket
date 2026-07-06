@@ -1,481 +1,473 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
+    PostgrestVersion: "14.5";
+  };
   public: {
     Tables: {
       audit_logs: {
         Row: {
-          action: string
-          created_at: string
-          details: Json | null
-          entity: string | null
-          id: string
-          supermarket_id: string | null
-          user_id: string | null
-        }
+          action: string;
+          created_at: string;
+          details: Json | null;
+          entity: string | null;
+          id: string;
+          supermarket_id: string | null;
+          user_id: string | null;
+        };
         Insert: {
-          action: string
-          created_at?: string
-          details?: Json | null
-          entity?: string | null
-          id?: string
-          supermarket_id?: string | null
-          user_id?: string | null
-        }
+          action: string;
+          created_at?: string;
+          details?: Json | null;
+          entity?: string | null;
+          id?: string;
+          supermarket_id?: string | null;
+          user_id?: string | null;
+        };
         Update: {
-          action?: string
-          created_at?: string
-          details?: Json | null
-          entity?: string | null
-          id?: string
-          supermarket_id?: string | null
-          user_id?: string | null
-        }
+          action?: string;
+          created_at?: string;
+          details?: Json | null;
+          entity?: string | null;
+          id?: string;
+          supermarket_id?: string | null;
+          user_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "audit_logs_supermarket_id_fkey"
-            columns: ["supermarket_id"]
-            isOneToOne: false
-            referencedRelation: "supermarkets"
-            referencedColumns: ["id"]
+            foreignKeyName: "audit_logs_supermarket_id_fkey";
+            columns: ["supermarket_id"];
+            isOneToOne: false;
+            referencedRelation: "supermarkets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       expenses: {
         Row: {
-          amount: number
-          category: string | null
-          created_at: string
-          description: string | null
-          id: string
-          manager_id: string | null
-          supermarket_id: string
-        }
+          amount: number;
+          category: string | null;
+          created_at: string;
+          description: string | null;
+          id: string;
+          manager_id: string | null;
+          supermarket_id: string;
+        };
         Insert: {
-          amount: number
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          manager_id?: string | null
-          supermarket_id: string
-        }
+          amount: number;
+          category?: string | null;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          manager_id?: string | null;
+          supermarket_id: string;
+        };
         Update: {
-          amount?: number
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          manager_id?: string | null
-          supermarket_id?: string
-        }
+          amount?: number;
+          category?: string | null;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          manager_id?: string | null;
+          supermarket_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "expenses_supermarket_id_fkey"
-            columns: ["supermarket_id"]
-            isOneToOne: false
-            referencedRelation: "supermarkets"
-            referencedColumns: ["id"]
+            foreignKeyName: "expenses_supermarket_id_fkey";
+            columns: ["supermarket_id"];
+            isOneToOne: false;
+            referencedRelation: "supermarkets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       notifications: {
         Row: {
-          created_at: string
-          id: string
-          is_read: boolean
-          level: string
-          message: string | null
-          recipient_id: string | null
-          supermarket_id: string | null
-          title: string
-        }
+          created_at: string;
+          id: string;
+          is_read: boolean;
+          level: string;
+          message: string | null;
+          recipient_id: string | null;
+          supermarket_id: string | null;
+          title: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          level?: string
-          message?: string | null
-          recipient_id?: string | null
-          supermarket_id?: string | null
-          title: string
-        }
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          level?: string;
+          message?: string | null;
+          recipient_id?: string | null;
+          supermarket_id?: string | null;
+          title: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          level?: string
-          message?: string | null
-          recipient_id?: string | null
-          supermarket_id?: string | null
-          title?: string
-        }
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          level?: string;
+          message?: string | null;
+          recipient_id?: string | null;
+          supermarket_id?: string | null;
+          title?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "notifications_supermarket_id_fkey"
-            columns: ["supermarket_id"]
-            isOneToOne: false
-            referencedRelation: "supermarkets"
-            referencedColumns: ["id"]
+            foreignKeyName: "notifications_supermarket_id_fkey";
+            columns: ["supermarket_id"];
+            isOneToOne: false;
+            referencedRelation: "supermarkets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       profiles: {
         Row: {
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-          is_active: boolean
-          phone: string | null
-          supermarket_id: string | null
-        }
+          created_at: string;
+          email: string | null;
+          full_name: string | null;
+          id: string;
+          is_active: boolean;
+          phone: string | null;
+          supermarket_id: string | null;
+        };
         Insert: {
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-          is_active?: boolean
-          phone?: string | null
-          supermarket_id?: string | null
-        }
+          created_at?: string;
+          email?: string | null;
+          full_name?: string | null;
+          id: string;
+          is_active?: boolean;
+          phone?: string | null;
+          supermarket_id?: string | null;
+        };
         Update: {
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          is_active?: boolean
-          phone?: string | null
-          supermarket_id?: string | null
-        }
+          created_at?: string;
+          email?: string | null;
+          full_name?: string | null;
+          id?: string;
+          is_active?: boolean;
+          phone?: string | null;
+          supermarket_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "profiles_supermarket_id_fkey"
-            columns: ["supermarket_id"]
-            isOneToOne: false
-            referencedRelation: "supermarkets"
-            referencedColumns: ["id"]
+            foreignKeyName: "profiles_supermarket_id_fkey";
+            columns: ["supermarket_id"];
+            isOneToOne: false;
+            referencedRelation: "supermarkets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       salaries: {
         Row: {
-          created_at: string
-          employee_name: string
-          id: string
-          monthly_salary: number
-          payment_date: string | null
-          payment_status: string
-          position: string | null
-          supermarket_id: string
-        }
+          created_at: string;
+          employee_name: string;
+          id: string;
+          monthly_salary: number;
+          payment_date: string | null;
+          payment_status: string;
+          position: string | null;
+          supermarket_id: string;
+        };
         Insert: {
-          created_at?: string
-          employee_name: string
-          id?: string
-          monthly_salary: number
-          payment_date?: string | null
-          payment_status?: string
-          position?: string | null
-          supermarket_id: string
-        }
+          created_at?: string;
+          employee_name: string;
+          id?: string;
+          monthly_salary: number;
+          payment_date?: string | null;
+          payment_status?: string;
+          position?: string | null;
+          supermarket_id: string;
+        };
         Update: {
-          created_at?: string
-          employee_name?: string
-          id?: string
-          monthly_salary?: number
-          payment_date?: string | null
-          payment_status?: string
-          position?: string | null
-          supermarket_id?: string
-        }
+          created_at?: string;
+          employee_name?: string;
+          id?: string;
+          monthly_salary?: number;
+          payment_date?: string | null;
+          payment_status?: string;
+          position?: string | null;
+          supermarket_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "salaries_supermarket_id_fkey"
-            columns: ["supermarket_id"]
-            isOneToOne: false
-            referencedRelation: "supermarkets"
-            referencedColumns: ["id"]
+            foreignKeyName: "salaries_supermarket_id_fkey";
+            columns: ["supermarket_id"];
+            isOneToOne: false;
+            referencedRelation: "supermarkets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       sales: {
         Row: {
-          amount: number
-          created_at: string
-          description: string | null
-          id: string
-          manager_id: string | null
-          supermarket_id: string
-        }
+          amount: number;
+          created_at: string;
+          description: string | null;
+          id: string;
+          manager_id: string | null;
+          supermarket_id: string;
+        };
         Insert: {
-          amount: number
-          created_at?: string
-          description?: string | null
-          id?: string
-          manager_id?: string | null
-          supermarket_id: string
-        }
+          amount: number;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          manager_id?: string | null;
+          supermarket_id: string;
+        };
         Update: {
-          amount?: number
-          created_at?: string
-          description?: string | null
-          id?: string
-          manager_id?: string | null
-          supermarket_id?: string
-        }
+          amount?: number;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          manager_id?: string | null;
+          supermarket_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "sales_supermarket_id_fkey"
-            columns: ["supermarket_id"]
-            isOneToOne: false
-            referencedRelation: "supermarkets"
-            referencedColumns: ["id"]
+            foreignKeyName: "sales_supermarket_id_fkey";
+            columns: ["supermarket_id"];
+            isOneToOne: false;
+            referencedRelation: "supermarkets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       stock: {
         Row: {
-          buying_price: number | null
-          created_at: string
-          id: string
-          item_name: string
-          quantity: number
-          reorder_level: number
-          selling_price: number | null
-          supermarket_id: string
-          supplier_name: string | null
-        }
+          buying_price: number | null;
+          created_at: string;
+          id: string;
+          item_name: string;
+          quantity: number;
+          reorder_level: number;
+          selling_price: number | null;
+          supermarket_id: string;
+          supplier_name: string | null;
+        };
         Insert: {
-          buying_price?: number | null
-          created_at?: string
-          id?: string
-          item_name: string
-          quantity?: number
-          reorder_level?: number
-          selling_price?: number | null
-          supermarket_id: string
-          supplier_name?: string | null
-        }
+          buying_price?: number | null;
+          created_at?: string;
+          id?: string;
+          item_name: string;
+          quantity?: number;
+          reorder_level?: number;
+          selling_price?: number | null;
+          supermarket_id: string;
+          supplier_name?: string | null;
+        };
         Update: {
-          buying_price?: number | null
-          created_at?: string
-          id?: string
-          item_name?: string
-          quantity?: number
-          reorder_level?: number
-          selling_price?: number | null
-          supermarket_id?: string
-          supplier_name?: string | null
-        }
+          buying_price?: number | null;
+          created_at?: string;
+          id?: string;
+          item_name?: string;
+          quantity?: number;
+          reorder_level?: number;
+          selling_price?: number | null;
+          supermarket_id?: string;
+          supplier_name?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "stock_supermarket_id_fkey"
-            columns: ["supermarket_id"]
-            isOneToOne: false
-            referencedRelation: "supermarkets"
-            referencedColumns: ["id"]
+            foreignKeyName: "stock_supermarket_id_fkey";
+            columns: ["supermarket_id"];
+            isOneToOne: false;
+            referencedRelation: "supermarkets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       supermarkets: {
         Row: {
-          created_at: string
-          email: string | null
-          id: string
-          location: string | null
-          name: string
-          phone: string | null
-        }
+          created_at: string;
+          email: string | null;
+          id: string;
+          location: string | null;
+          name: string;
+          phone: string | null;
+        };
         Insert: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          location?: string | null
-          name: string
-          phone?: string | null
-        }
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          location?: string | null;
+          name: string;
+          phone?: string | null;
+        };
         Update: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          location?: string | null
-          name?: string
-          phone?: string | null
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          location?: string | null;
+          name?: string;
+          phone?: string | null;
+        };
+        Relationships: [];
+      };
       user_roles: {
         Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
-    }
+          created_at?: string;
+          id?: string;
+          role?: Database["public"]["Enums"]["app_role"];
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      current_supermarket_id: { Args: never; Returns: string }
+      current_supermarket_id: { Args: never; Returns: string };
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-    }
+          _role: Database["public"]["Enums"]["app_role"];
+          _user_id: string;
+        };
+        Returns: boolean;
+      };
+    };
     Enums: {
-      app_role: "admin" | "manager"
-    }
+      app_role: "admin" | "manager";
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;
 
 export const Constants = {
   public: {
@@ -483,4 +475,4 @@ export const Constants = {
       app_role: ["admin", "manager"],
     },
   },
-} as const
+} as const;

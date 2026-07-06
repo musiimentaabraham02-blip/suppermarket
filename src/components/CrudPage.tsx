@@ -5,8 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Trash2, Download } from "lucide-react";
 import { format } from "date-fns";
@@ -31,7 +44,15 @@ interface Props {
   attachManager?: boolean;
 }
 
-export function CrudPage({ title, description, table, fields, columns, defaults, attachManager }: Props) {
+export function CrudPage({
+  title,
+  description,
+  table,
+  fields,
+  columns,
+  defaults,
+  attachManager,
+}: Props) {
   const { user, supermarketId, roles } = useAuth();
   const isAdmin = roles.includes("admin");
   const [rows, setRows] = useState<any[]>([]);
@@ -39,8 +60,8 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
   const [form, setForm] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { 
-    load(); 
+  useEffect(() => {
+    load();
   }, []);
 
   useEffect(() => {
@@ -54,9 +75,13 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
     setSupermarkets(data ?? []);
   }
   async function load() {
-    const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: false }).limit(200);
+    const { data, error } = await supabase
+      .from(table)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
     if (error && !error.message.includes("permission denied")) toast.error(error.message);
-    
+
     // Merge database data with any local fallback data (for presentation mode)
     const localData = JSON.parse(localStorage.getItem(`twimu_fallback_${table}`) || "[]");
     setRows([...localData, ...(data ?? [])]);
@@ -68,17 +93,31 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
     const payload: Record<string, any> = { ...defaults, ...form };
     if (!isAdmin) payload.supermarket_id = supermarketId;
     if (attachManager && user) payload.manager_id = user.id;
-    if (!payload.supermarket_id) { setLoading(false); return toast.error("No supermarket assigned. Ask an admin to assign you a branch."); }
+    if (!payload.supermarket_id) {
+      setLoading(false);
+      return toast.error("No supermarket assigned. Ask an admin to assign you a branch.");
+    }
     // coerce numbers
-    fields.forEach((f) => { if (f.type === "number" && payload[f.name] !== undefined) payload[f.name] = Number(payload[f.name]); });
-    
+    fields.forEach((f) => {
+      if (f.type === "number" && payload[f.name] !== undefined)
+        payload[f.name] = Number(payload[f.name]);
+    });
+
     const { data, error } = await supabase.from(table).insert(payload).select().maybeSingle();
     setLoading(false);
-    
+
     if (error) {
-      if (error.message.includes("has_role") || error.message.includes("row-level security") || error.message.includes("permission denied")) {
+      if (
+        error.message.includes("has_role") ||
+        error.message.includes("row-level security") ||
+        error.message.includes("permission denied")
+      ) {
         // PRESENTATION FALLBACK: Save locally if DB is locked
-        const newRow = { id: `local-${Date.now()}`, created_at: new Date().toISOString(), ...payload };
+        const newRow = {
+          id: `local-${Date.now()}`,
+          created_at: new Date().toISOString(),
+          ...payload,
+        };
         const localData = JSON.parse(localStorage.getItem(`twimu_fallback_${table}`) || "[]");
         localStorage.setItem(`twimu_fallback_${table}`, JSON.stringify([newRow, ...localData]));
         toast.success("Added successfully!");
@@ -88,7 +127,7 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
       }
       return toast.error(error.message);
     }
-    
+
     toast.success("Added");
     setForm({});
     load();
@@ -103,18 +142,22 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
 
   function exportCSV() {
     if (rows.length === 0) return toast.error("No data to export.");
-    const headers = columns.map(c => c.label).join(",") + ",Date\n";
-    const csvData = rows.map(r => {
-      const rowData = columns.map(c => `"${String(r[c.key] ?? '').replace(/"/g, '""')}"`).join(",");
-      const date = `"${format(new Date(r.created_at), "yyyy-MM-dd HH:mm")}"`;
-      return `${rowData},${date}`;
-    }).join("\n");
-    
-    const blob = new Blob([headers + csvData], { type: 'text/csv;charset=utf-8;' });
+    const headers = columns.map((c) => c.label).join(",") + ",Date\n";
+    const csvData = rows
+      .map((r) => {
+        const rowData = columns
+          .map((c) => `"${String(r[c.key] ?? "").replace(/"/g, '""')}"`)
+          .join(",");
+        const date = `"${format(new Date(r.created_at), "yyyy-MM-dd HH:mm")}"`;
+        return `${rowData},${date}`;
+      })
+      .join("\n");
+
+    const blob = new Blob([headers + csvData], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `${title.toLowerCase().replace(/\s+/g, '_')}_export.csv`;
+    a.download = `${title.toLowerCase().replace(/\s+/g, "_")}_export.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
     toast.success("Export downloaded successfully!");
@@ -142,7 +185,9 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
 
       <Card className="bg-white/95 border-pink-100 shadow-md shadow-pink-100/30 text-slate-800 backdrop-blur-md">
         <CardHeader>
-          <CardTitle className="text-base font-bold text-slate-800">New {title.toLowerCase().replace(/s$/, "")}</CardTitle>
+          <CardTitle className="text-base font-bold text-slate-800">
+            New {title.toLowerCase().replace(/s$/, "")}
+          </CardTitle>
           <CardDescription className="text-slate-500">Record a new entry.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -150,10 +195,23 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
             {isAdmin && (
               <div className="space-y-2">
                 <Label className="text-slate-600 font-semibold">Supermarket</Label>
-                <Select value={form.supermarket_id ?? ""} onValueChange={(v) => setForm({ ...form, supermarket_id: v })}>
-                  <SelectTrigger className="bg-white border-pink-200 text-slate-800"><SelectValue placeholder="Select branch" /></SelectTrigger>
+                <Select
+                  value={form.supermarket_id ?? ""}
+                  onValueChange={(v) => setForm({ ...form, supermarket_id: v })}
+                >
+                  <SelectTrigger className="bg-white border-pink-200 text-slate-800">
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
                   <SelectContent className="bg-white border-pink-100 text-slate-800 backdrop-blur-xl">
-                    {supermarkets.map((s) => <SelectItem key={s.id} value={s.id} className="focus:bg-pink-50 focus:text-pink-600">{s.name}</SelectItem>)}
+                    {supermarkets.map((s) => (
+                      <SelectItem
+                        key={s.id}
+                        value={s.id}
+                        className="focus:bg-pink-50 focus:text-pink-600"
+                      >
+                        {s.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -162,10 +220,23 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
               <div className="space-y-2" key={f.name}>
                 <Label className="text-slate-600 font-semibold">{f.label}</Label>
                 {f.type === "select" ? (
-                  <Select value={form[f.name] ?? ""} onValueChange={(v) => setForm({ ...form, [f.name]: v })}>
-                    <SelectTrigger className="bg-white border-pink-200 text-slate-800"><SelectValue placeholder={f.placeholder ?? "Select"} /></SelectTrigger>
+                  <Select
+                    value={form[f.name] ?? ""}
+                    onValueChange={(v) => setForm({ ...form, [f.name]: v })}
+                  >
+                    <SelectTrigger className="bg-white border-pink-200 text-slate-800">
+                      <SelectValue placeholder={f.placeholder ?? "Select"} />
+                    </SelectTrigger>
                     <SelectContent className="bg-white border-pink-100 text-slate-800 backdrop-blur-xl">
-                      {f.options?.map((o) => <SelectItem key={o.value} value={o.value} className="focus:bg-pink-50 focus:text-pink-600">{o.label}</SelectItem>)}
+                      {f.options?.map((o) => (
+                        <SelectItem
+                          key={o.value}
+                          value={o.value}
+                          className="focus:bg-pink-50 focus:text-pink-600"
+                        >
+                          {o.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 ) : (
@@ -180,7 +251,11 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
                 )}
               </div>
             ))}
-            <Button type="submit" disabled={loading} className="md:col-span-1 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white border-0 shadow-md shadow-pink-500/20">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="md:col-span-1 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white border-0 shadow-md shadow-pink-500/20"
+            >
               <Plus className="size-4 mr-1" /> Add
             </Button>
           </form>
@@ -191,16 +266,23 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
         <CardHeader className="border-b border-pink-50 flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-4">
           <div>
             <CardTitle className="text-base font-bold text-slate-800">Recent</CardTitle>
-            <CardDescription className="text-slate-500">{filteredRows.length} entries</CardDescription>
+            <CardDescription className="text-slate-500">
+              {filteredRows.length} entries
+            </CardDescription>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <Input 
-              placeholder="Search..." 
+            <Input
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-8 w-full sm:w-48 bg-white border-pink-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-pink-400/50 text-sm"
             />
-            <Button variant="outline" size="sm" onClick={exportCSV} className="h-8 bg-white border-pink-200 text-pink-600 hover:bg-pink-50/50 hover:text-pink-700 whitespace-nowrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportCSV}
+              className="h-8 bg-white border-pink-200 text-pink-600 hover:bg-pink-50/50 hover:text-pink-700 whitespace-nowrap"
+            >
               <Download className="size-3.5 mr-2" /> Export CSV
             </Button>
           </div>
@@ -210,21 +292,37 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
             <Table>
               <TableHeader className="bg-pink-50/50 hover:bg-pink-50/50">
                 <TableRow className="border-pink-50 hover:bg-transparent">
-                  {columns.map((c) => <TableHead key={c.key} className="text-pink-700 font-bold">{c.label}</TableHead>)}
+                  {columns.map((c) => (
+                    <TableHead key={c.key} className="text-pink-700 font-bold">
+                      {c.label}
+                    </TableHead>
+                  ))}
                   <TableHead className="text-pink-700 font-bold">When</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRows.map((r) => (
-                  <TableRow key={r.id} className="border-pink-50 hover:bg-pink-50/20 transition-colors">
+                  <TableRow
+                    key={r.id}
+                    className="border-pink-50 hover:bg-pink-50/20 transition-colors"
+                  >
                     {columns.map((c) => (
-                      <TableCell key={c.key} className="text-slate-700">{c.render ? c.render(r[c.key], r) : (r[c.key] ?? "—")}</TableCell>
+                      <TableCell key={c.key} className="text-slate-700">
+                        {c.render ? c.render(r[c.key], r) : (r[c.key] ?? "—")}
+                      </TableCell>
                     ))}
-                    <TableCell className="text-slate-400 text-sm whitespace-nowrap">{format(new Date(r.created_at), "MMM d, HH:mm")}</TableCell>
+                    <TableCell className="text-slate-400 text-sm whitespace-nowrap">
+                      {format(new Date(r.created_at), "MMM d, HH:mm")}
+                    </TableCell>
                     <TableCell>
                       {isAdmin && (
-                        <Button variant="ghost" size="icon" onClick={() => remove(r.id)} className="text-slate-400 hover:text-red-600 hover:bg-red-50">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(r.id)}
+                          className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        >
                           <Trash2 className="size-4" />
                         </Button>
                       )}
@@ -232,7 +330,14 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
                   </TableRow>
                 ))}
                 {filteredRows.length === 0 && (
-                  <TableRow className="border-0 hover:bg-transparent"><TableCell colSpan={columns.length + 2} className="text-center text-slate-400 py-12">No data found.</TableCell></TableRow>
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableCell
+                      colSpan={columns.length + 2}
+                      className="text-center text-slate-400 py-12"
+                    >
+                      No data found.
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -245,5 +350,9 @@ export function CrudPage({ title, description, table, fields, columns, defaults,
 
 export function money(v: any) {
   const n = Number(v ?? 0);
-  return new Intl.NumberFormat("en-UG", { style: "currency", currency: "UGX", maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat("en-UG", {
+    style: "currency",
+    currency: "UGX",
+    maximumFractionDigits: 0,
+  }).format(n);
 }
